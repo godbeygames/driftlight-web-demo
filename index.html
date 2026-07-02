@@ -39,8 +39,11 @@
 
       #unity-container {
         position: relative;
-        width: 100vw;
-        height: calc(100vh - 44px); /* leave room for the footer bar */
+        /* Largest 16:10 box (the game's authored aspect, 960x600) that fits
+           the window minus the footer bar — letterboxed, never stretched, so
+           screen-edge UI (save icon, HUD) is never clipped. */
+        aspect-ratio: 960 / 600;
+        width: min(100vw, calc((100vh - 44px) * (960 / 600)));
       }
       #unity-canvas {
         background: var(--canvas-bg);
