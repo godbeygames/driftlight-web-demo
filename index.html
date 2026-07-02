@@ -39,11 +39,19 @@
 
       #unity-container {
         position: relative;
+        width: 100vw;
+        height: calc(100vh - 44px); /* leave room for the footer bar */
       }
       #unity-canvas {
         background: var(--canvas-bg);
         display: block;
         outline: none;
+        /* CSS size MUST be decoupled from the drawing-buffer (width/height
+           attributes) or Unity's matchWebGLToCanvasSize feedback-loops the
+           canvas ever larger ("zoom in and crash") and blows past
+           maxRenderTextureSize(8192). */
+        width: 100%;
+        height: 100%;
       }
 
       #unity-loading-bar {
@@ -141,6 +149,11 @@
         productName: "Driftlight",
         productVersion: "1",
         showBanner: unityShowBanner,
+        // Match the drawing buffer to the canvas's CSS size, but clamp the
+        // device pixel ratio so buffer = cssSize * dpr can never exceed the
+        // 8192 max render texture size on Retina / HiDPI displays.
+        matchWebGLToCanvasSize: true,
+        devicePixelRatio: Math.min(window.devicePixelRatio || 1, 2),
       };
 
       loadingBar.style.display = "block";
