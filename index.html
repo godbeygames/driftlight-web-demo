@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Driftlight</title>
+    <style>
+      /* ============================================================
+         Driftlight WebGL template
+         Edit the --page-bg value below to recolor the area around the
+         canvas. On web the player uses the OS cursor (CursorManager's
+         software cursor is disabled in WebGL builds).
+         ============================================================ */
+      :root {
+        --page-bg: #0a0a0e;       /* flat page background — change to taste */
+        --canvas-bg: #000000;
+        --bar-bg: #2a2018;
+        --bar-fill: #c08040;
+        --text: #d8cfc4;
+        --text-dim: #7a6f64;
+        --border: #3a2a1c;
+      }
+
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: var(--page-bg);
+        overflow: hidden;
+        font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        color: var(--text);
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+      }
+
+      #unity-container {
+        position: relative;
+      }
+      #unity-canvas {
+        background: var(--canvas-bg);
+        display: block;
+        outline: none;
+      }
+
+      #unity-loading-bar {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+        text-align: center;
+      }
+      #unity-progress-bar-empty {
+        width: 240px;
+        height: 14px;
+        background: var(--bar-bg);
+        border: 1px solid var(--border);
+      }
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: var(--bar-fill);
+        transition: width 0.2s ease-out;
+      }
+
+      #unity-footer {
+        padding: 10px 12px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 12px;
+        color: var(--text-dim);
+      }
+      #unity-fullscreen-button,
+      #unity-pause-button {
+        cursor: pointer;
+        padding: 4px 10px;
+        border: 1px solid var(--border);
+        background: var(--bar-bg);
+        color: var(--text);
+        user-select: none;
+      }
+      #unity-fullscreen-button:hover,
+      #unity-pause-button:hover {
+        background: var(--border);
+      }
+      #unity-warning {
+        position: absolute;
+        left: 50%;
+        top: 10px;
+        transform: translateX(-50%);
+        max-width: 80%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" width=960 height=600 tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"></div>
+    </div>
+    <div id="unity-footer">
+      <div id="unity-build-title">Driftlight</div>
+      <div id="unity-pause-button">Menu</div>
+      <div id="unity-fullscreen-button">Fullscreen</div>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var fullscreenButton = document.querySelector("#unity-fullscreen-button");
+      var pauseButton = document.querySelector("#unity-pause-button");
+      var warningBanner = document.querySelector("#unity-warning");
+
+      function unityShowBanner(msg, type) {
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: #aa2222; color: white; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: #aa8822; color: white; padding: 10px;';
+          setTimeout(function () { if (warningBanner.contains(div)) warningBanner.removeChild(div); }, 5000);
+        }
+      }
+
+      var buildUrl = "Build";
+      var config = {
+        dataUrl: buildUrl + "/Driftlight_demo.data.unityweb",
+        frameworkUrl: buildUrl + "/Driftlight_demo.framework.js.unityweb",
+        codeUrl: buildUrl + "/Driftlight_demo.wasm.unityweb",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "Godbey Games LLC",
+        productName: "Driftlight",
+        productVersion: "1",
+        showBanner: unityShowBanner,
+      };
+
+      loadingBar.style.display = "block";
+
+      var script = document.createElement("script");
+      script.src = buildUrl + "/Driftlight_demo.loader.js";
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = (100 * progress) + "%";
+        }).then((unityInstance) => {
+          loadingBar.style.display = "none";
+          fullscreenButton.onclick = () => { unityInstance.SetFullscreen(1); };
+          pauseButton.onclick = () => {
+            unityInstance.SendMessage("PauseManager", "TriggerPauseInput");
+            canvas.focus(); // return keyboard focus so P / menu nav still works
+          };
+        }).catch((message) => { alert(message); });
+      };
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
